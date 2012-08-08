@@ -160,7 +160,7 @@ void powerswitch(int outlet, bool state) {
 
 void sendShiftCmd(int cmd) {
   digitalWrite(xpLatchPin, LOW);
-  shiftOut(xpDataPin, xpClockPin, MSBFIRST, 0);
+  shiftOut(xpDataPin, xpClockPin, MSBFIRST, cmd);
   digitalWrite(xpLatchPin, HIGH);
 }
 
