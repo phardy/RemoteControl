@@ -81,8 +81,14 @@
     <script>
       $('select').bind('change', function(event) {
         element = event.target.id;
+        if (element.substr(0, 6) == "outlet") {
+          eleid = element.substr(6, 1);
+          element = "outlet";
+        } else {
+          eleid = 0;
+        }
         command = event.target.value;
-        $.get('/cmd', { 'ele' : element, 'cmd' : command });
+        $.get('/cmd', { 'ele' : element, 'eleid' : eleid, 'cmd' : command });
       });
     </script>
   </body>

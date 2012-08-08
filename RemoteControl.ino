@@ -26,6 +26,7 @@
 #include <Ethernet.h>
 #include <WebServer.h>
 #include <SD.h>
+#include <stdlib.h>
 
 // IO pins
 // Select pin for the SD card
@@ -49,10 +50,17 @@ const int NAMELEN = 8;
 const int VALUELEN = 8;
 
 // External lights
-bool extlights = false;
+int externLightState = LOW;
 // Power points
-bool powerswitches[] = { false, false, false, false };
-char* switchnames[] = { "outlet1", "outlet2", "outlet3", "outlet4" };
+bool powerSwitches[] = { false, false, false, false };
+// Values to write to turn power points on
+int powerOnVals[] = { 128, 32, 8, 2 };
+// Values to write to turn power points off
+int powerOffVals[] = { 64, 16, 4, 1 };
+
+// Timer variables
+bool timerActive = false;
+long timerTime;
 
 boolean authorise(WebServer &server) {
   if (server.checkCredentials(credentials)) {
@@ -93,17 +101,57 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
     char name[NAMELEN];
     char value[VALUELEN];
     char ele[NAMELEN];
-    char cmd[VALUELEN];
+    int eleid;
+    bool cmd;
+
     while (strlen(url_tail)) {
       rc = server.nextURLparam(&url_tail, name, NAMELEN, value, VALUELEN);
       if (rc != URLPARAM_EOS) {
 	if (strcmp(name, "ele") == 0) {
-	  
+	  strcpy(value, ele);
+	} else if (strcmp(name, "eleid") == 0) {
+	  eleid = atoi(value);
 	} else if (strcmp(name, "cmd") == 0) {
-	  // do nothing
+	  if (strcmp(value, "on") == 0) {
+	    cmd=true;
+	  } else {
+	    cmd=false;
+	  }
+	} else if (strcmp(name, "timer") == 0) {
+	  long timeDelay = atol(value);
+	  timerActive = true;
+	  timerTime = millis() + timeDelay*1000;
 	}
       }
     }
+
+    if (eleid == 0) {
+      if (cmd) {
+	externlights(HIGH);
+      } else {
+	externlights(LOW);
+      }
+    } else {
+      powerswitch(eleid, cmd);
+    }
+  }
+}
+
+void externlights(int state) {
+  digitalWrite(relayAPin, state);
+  digitalWrite(relayBPin, state);
+  externLightState = state;
+}
+
+void powerswitch(int outlet, bool state) {
+  // Nothing yet
+}
+
+void updateTimer() {
+  long curTime = millis();
+  if (curTime > timerTime) {
+    timerActive = false;
+    externlights(LOW);
   }
 }
 
@@ -136,4 +184,7 @@ void loop() {
   char buff[64];
   int len = 64;
   webserver.processConnection(buff, &len);
+  if (timerActive) {
+    updateTimer();
+  }
 }
