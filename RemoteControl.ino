@@ -57,6 +57,8 @@ bool powerSwitches[] = { false, false, false, false };
 int powerOnVals[] = { 128, 32, 8, 2 };
 // Values to write to turn power points off
 int powerOffVals[] = { 64, 16, 4, 1 };
+bool sendingPowerCmd = false;
+long powerCmdTime;
 
 // Timer variables
 bool timerActive = false;
@@ -144,7 +146,22 @@ void externlights(int state) {
 }
 
 void powerswitch(int outlet, bool state) {
-  // Nothing yet
+  int cmd;
+  if (state) {
+    cmd = powerOnVals[outlet-1];
+  } else {
+    cmd = powerOffVals[outlet-1];
+  }
+
+  sendingPowerCmd = true;
+  powerCmdTime = millis() + 500;
+  sendShiftCmd(cmd);
+}
+
+void sendShiftCmd(int cmd) {
+  digitalWrite(xpLatchPin, LOW);
+  shiftOut(xpDataPin, xpClockPin, MSBFIRST, 0);
+  digitalWrite(xpLatchPin, HIGH);
 }
 
 void updateTimer() {
@@ -152,6 +169,14 @@ void updateTimer() {
   if (curTime > timerTime) {
     timerActive = false;
     externlights(LOW);
+  }
+}
+
+void updatePowerTimer() {
+  long curTime = millis();
+  if (curTime > powerCmdTime) {
+    sendShiftCmd(0);
+    sendingPowerCmd=false;
   }
 }
 
@@ -164,9 +189,7 @@ void setup() {
   pinMode(relayBPin, OUTPUT);
 
   // Flush the expand module
-  digitalWrite(xpLatchPin, LOW);
-  shiftOut(xpDataPin, xpClockPin, MSBFIRST, 0);
-  digitalWrite(xpLatchPin, HIGH);
+  sendShiftCmd(0);
 
   // Initialise the SD card
   SD.begin(SDchipSelect);
@@ -186,5 +209,8 @@ void loop() {
   webserver.processConnection(buff, &len);
   if (timerActive) {
     updateTimer();
+  }
+  if (sendingPowerCmd) {
+    updatePowerTimer();
   }
 }
