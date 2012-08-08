@@ -85,13 +85,37 @@ void sendFile(WebServer &server, char *page) {
   }
 }
 
+void statusCmd(WebServer &server, WebServer::ConnectionType type,
+	       char *, bool) {
+  if (authorise(server)) {
+    server.print("{extern:");
+    if (externLightState) {
+      server.print("on");
+    } else {
+      server.print("off");
+    }
+    // Beware hard coded output size
+    for (int i = 1; i < 5; i++) {
+      server.print(",outlet");
+      server.print(i);
+      server.print(" : ");
+      if (powerSwitches[i-1]) {
+    	server.print("on");
+      } else {
+    	server.print("off");
+      }
+    }
+    server.println(" }");
+  }
+}
+
 void defaultPage(WebServer &server, WebServer::ConnectionType type,
 		 char *, bool) {
   if (authorise(server)) {
     sendFile(server, "web/index.htm");
   }
 }
-
+ 
 void cmdParser(WebServer &server, WebServer::ConnectionType type,
 	       char *url_tail, bool tail_complete) {
   if (authorise(server)) {
@@ -155,6 +179,7 @@ void powerswitch(int outlet, bool state) {
 
   sendingPowerCmd = true;
   powerCmdTime = millis() + 500;
+  powerSwitches[outlet] = state;
   sendShiftCmd(cmd);
 }
 
@@ -200,6 +225,7 @@ void setup() {
   // Initialise the web server
   webserver.setDefaultCommand(&defaultPage);
   webserver.addCommand("cmd", &cmdParser);
+  webserver.addCommand("status.json", &statusCmd);
   webserver.begin();
 }
 
