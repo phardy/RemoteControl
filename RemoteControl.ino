@@ -57,8 +57,6 @@ bool powerSwitches[] = { false, false, false, false };
 int powerOnVals[] = { 128, 32, 8, 2 };
 // Values to write to turn power points off
 int powerOffVals[] = { 64, 16, 4, 1 };
-bool sendingPowerCmd = false;
-long powerCmdTime;
 
 // Timer variables
 bool timerActive = false;
@@ -80,32 +78,30 @@ void sendFile(WebServer &server, char *page) {
     while (fd.available()) {
       server.print(char(fd.read()));
     }
-  } else {
-    // erm, dunno
   }
 }
 
 void statusCmd(WebServer &server, WebServer::ConnectionType type,
 	       char *, bool) {
   if (authorise(server)) {
-    server.print("{extern:");
+    server.print("{\"extern\":");
     if (externLightState) {
-      server.print("on");
+      server.print("1");
     } else {
-      server.print("off");
+      server.print("0");
     }
     // Beware hard coded output size
     for (int i = 1; i < 5; i++) {
-      server.print(",outlet");
+      server.print(",\"outlet");
       server.print(i);
-      server.print(" : ");
+      server.print("\":");
       if (powerSwitches[i-1]) {
-    	server.print("on");
+    	server.print("1");
       } else {
-    	server.print("off");
+    	server.print("0");
       }
     }
-    server.println(" }");
+    server.println("}");
   }
 }
 
@@ -177,9 +173,9 @@ void powerswitch(int outlet, bool state) {
     cmd = powerOffVals[outlet-1];
   }
 
-  sendingPowerCmd = true;
-  powerCmdTime = millis() + 500;
-  powerSwitches[outlet] = state;
+  timerActive = true;
+  timerTime = millis() + 500;
+  powerSwitches[outlet-1] = state;
   sendShiftCmd(cmd);
 }
 
@@ -194,14 +190,7 @@ void updateTimer() {
   if (curTime > timerTime) {
     timerActive = false;
     externlights(LOW);
-  }
-}
-
-void updatePowerTimer() {
-  long curTime = millis();
-  if (curTime > powerCmdTime) {
     sendShiftCmd(0);
-    sendingPowerCmd=false;
   }
 }
 
@@ -235,8 +224,5 @@ void loop() {
   webserver.processConnection(buff, &len);
   if (timerActive) {
     updateTimer();
-  }
-  if (sendingPowerCmd) {
-    updatePowerTimer();
   }
 }
