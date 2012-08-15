@@ -187,27 +187,31 @@ boolean authorise(WebServer &server) {
   }
 }
 
-void statusCmd(WebServer &server, WebServer::ConnectionType type,
-	       char *, bool) {
-  if (authorise(server)) {
-    server.print("{ \"extern\" : ");
-    if (externLightState) {
+void sendStatus(WebServer &server) {
+  server.print("{ \"extern\" : ");
+  if (externLightState) {
+    server.print("\"on\"");
+  } else {
+    server.print("\"off\"");
+  }
+  // Beware hard coded output size
+  for (int i = 1; i < 5; i++) {
+    server.print(", \"outlet");
+    server.print(i);
+    server.print("\" : ");
+    if (powerSwitches[i-1]) {
       server.print("\"on\"");
     } else {
       server.print("\"off\"");
     }
-    // Beware hard coded output size
-    for (int i = 1; i < 5; i++) {
-      server.print(", \"outlet");
-      server.print(i);
-      server.print("\" : ");
-      if (powerSwitches[i-1]) {
-    	server.print("\"on\"");
-      } else {
-    	server.print("\"off\"");
-      }
-    }
-    server.println(" }");
+  }
+  server.println(" }");
+}
+
+void statusCmd(WebServer &server, WebServer::ConnectionType type,
+	       char *, bool) {
+  if (authorise(server)) {
+    sendStatus(server);
   }
 }
 
@@ -263,6 +267,7 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
       powerswitch(eleid, cmd);
     }
   }
+  sendStatus(server);
 }
 
 void externlights(int state) {
