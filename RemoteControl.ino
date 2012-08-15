@@ -57,6 +57,8 @@ int powerOffVals[] = { 64, 16, 4, 1 };
 // Timer variables
 bool timerActive = false;
 long timerTime;
+bool powerActive = false;
+long powerTime;
 
 // Yes, I put a web page here.
 P(index_htm) = "<!DOCTYPE html>"
@@ -277,8 +279,8 @@ void powerswitch(int outlet, bool state) {
     cmd = powerOffVals[outlet-1];
   }
 
-  timerActive = true;
-  timerTime = millis() + 500;
+  powerActive = true;
+  powerTime = millis() + 500;
   powerSwitches[outlet-1] = state;
   sendShiftCmd(cmd);
 }
@@ -289,11 +291,13 @@ void sendShiftCmd(int cmd) {
   digitalWrite(xpLatchPin, HIGH);
 }
 
-void updateTimer() {
+void updateTimers() {
   long curTime = millis();
   if (curTime > timerTime) {
     timerActive = false;
     externlights(LOW);
+  }
+  if (curTime > powerTime) {
     sendShiftCmd(0);
   }
 }
@@ -323,7 +327,7 @@ void loop() {
   char buff[64];
   int len = 64;
   webserver.processConnection(buff, &len);
-  if (timerActive) {
-    updateTimer();
+  if (timerActive || powerActive) {
+    updateTimers();
   }
 }
