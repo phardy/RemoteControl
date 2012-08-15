@@ -25,12 +25,8 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <WebServer.h>
-#include <SD.h>
-#include <stdlib.h>
 
 // IO pins
-// Select pin for the SD card
-const int SDchipSelect = 4;
 // Pins for the expand module
 const int xpDataPin = 7;
 const int xpLatchPin = 6;
@@ -62,6 +58,103 @@ int powerOffVals[] = { 64, 16, 4, 1 };
 bool timerActive = false;
 long timerTime;
 
+// Yes, I put a web page here.
+P(index_htm) = "<!DOCTYPE html>"
+  "<html>"
+  "<head>"
+  "<title>Remote control</title>"
+  "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+  "<link rel=\"stylesheet\" href=\"http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css\" />"
+  "<script src=\"http://code.jquery.com/jquery-1.7.1.min.js\"></script>"
+  "<script src=\"http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.js\"></script>"
+  "</head>"
+  "<body>"
+  "<div data-role=\"page\" id=\"page1\" data-theme=\"a\">"
+  "<div data-role=\"header\">"
+  "<h3>Remote Control</h3>"
+  "</div>"
+  "<div data-role=\"content\" style=\"padding: 15px\">"
+  "<div class=\"ui-grid-b\">"
+  "<div class=\"ui-block-a\">"
+  "</div>"
+  "<div class=\"ui-block-b\">"
+  "<div data-role=\"fieldcontain\">"
+  "<fieldset data-role=\"controlgroup\">"
+  "<label for=\"extern\">Entry lights</label>"
+  "<select name=\"extern\" id=\"extern\" data-theme=\"\" data-role=\"slider\">"
+  "<option value=\"off\">Off</option>"
+  "<option value=\"on\">On</option>"
+  "</select>"
+  "</fieldset>"
+  "</div>"
+  "</div>"
+  "<div class=\"ui-block-c\"></div>"
+  "</div>"
+  "<h3>Power switches</h3>"
+  "<div class=\"ui-grid-a\">"
+  "<div class=\"ui-block-a\">"
+  "<div data-role=\"fieldcontain\">"
+  "<fieldset data-role=\"controlgroup\">"
+  "<label for=\"outlet1\">Outlet 1</label>"
+  "<select name=\"outlet1\" id=\"outlet1\" data-theme=\"\" data-role=\"slider\">"
+  "<option value=\"off\">Off</option>"
+  "<option value=\"on\">On</option>"
+  "</select>"
+  "</fieldset>"
+  "</div>"
+  "</div>"
+  "<div class=\"ui-block-b\">"
+  "<div data-role=\"fieldcontain\">"
+  "<fieldset data-role=\"controlgroup\">"
+  "<label for=\"outlet3\">Outlet 3</label>"
+  "<select name=\"outlet3\" id=\"outlet3\" data-theme=\"\" data-role=\"slider\">"
+  "<option value=\"off\">Off</option>"
+  "<option value=\"on\">On</option>"
+  "</select>"
+  "</fieldset>"
+  "</div>"
+  "</div>"
+  "<div class=\"ui-block-a\">"
+  "<div data-role=\"fieldcontain\">"
+  "<fieldset data-role=\"controlgroup\">"
+  "<label for=\"outlet2\">Outlet 2</label>"
+  "<select name=\"outlet2\" id=\"outlet2\" data-theme=\"\" data-role=\"slider\">"
+  "<option value=\"off\">Off</option>"
+  "<option value=\"on\">On</option>"
+  "</select>"
+  "</fieldset>"
+  "</div>"
+  "</div>"
+  "<div class=\"ui-block-b\">"
+  "<div data-role=\"fieldcontain\">"
+  "<fieldset data-role=\"controlgroup\">"
+  "<label for=\"outlet4\">Outlet 4</label>"
+  "<select name=\"outlet4\" id=\"outlet4\" data-theme=\"\" data-role=\"slider\">"
+  "<option value=\"off\">Off</option>"
+  "<option value=\"on\">On</option>"
+  "</select>"
+  "</fieldset>"
+  "</div>"
+  "</div>"
+  "</div>"
+  "</div>"
+  "</div>"
+  "<script>"
+  "$('select').bind('change', function(event) {"
+  "element = event.target.id;"
+  "if (element.substr(0, 6) == \"outlet\") {"
+  "eleid = element.substr(6, 1);"
+  "element = \"outlet\";"
+  "} else {"
+  "eleid = 0;"
+  "}"
+  "command = event.target.value;"
+  "$.get('/cmd', { 'ele' : element, 'eleid' : eleid, 'cmd' : command });"
+  "});"
+  "</script>"
+  "</body>"
+  "</html>";
+
 boolean authorise(WebServer &server) {
   if (server.checkCredentials(credentials)) {
     server.httpSuccess();
@@ -72,19 +165,10 @@ boolean authorise(WebServer &server) {
   }
 }
 
-void sendFile(WebServer &server, char *page) {
-  if (SD.exists(page)) {
-    File fd = SD.open(page);
-    while (fd.available()) {
-      server.print(char(fd.read()));
-    }
-  }
-}
-
 void statusCmd(WebServer &server, WebServer::ConnectionType type,
 	       char *, bool) {
   if (authorise(server)) {
-    server.print("{\"extern\":");
+    server.print("{ \"extern\" : ");
     if (externLightState) {
       server.print("1");
     } else {
@@ -92,23 +176,23 @@ void statusCmd(WebServer &server, WebServer::ConnectionType type,
     }
     // Beware hard coded output size
     for (int i = 1; i < 5; i++) {
-      server.print(",\"outlet");
+      server.print(", \"outlet");
       server.print(i);
-      server.print("\":");
+      server.print("\" : ");
       if (powerSwitches[i-1]) {
     	server.print("1");
       } else {
     	server.print("0");
       }
     }
-    server.println("}");
+    server.println(" }");
   }
 }
 
 void defaultPage(WebServer &server, WebServer::ConnectionType type,
 		 char *, bool) {
   if (authorise(server)) {
-    sendFile(server, "web/index.htm");
+    server.printP(index_htm);
   }
 }
  
@@ -195,7 +279,6 @@ void updateTimer() {
 }
 
 void setup() {
-  pinMode(SDchipSelect, OUTPUT);
   pinMode(xpDataPin, OUTPUT);
   pinMode(xpLatchPin, OUTPUT);
   pinMode(xpClockPin, OUTPUT);
@@ -205,14 +288,12 @@ void setup() {
   // Flush the expand module
   sendShiftCmd(0);
 
-  // Initialise the SD card
-  SD.begin(SDchipSelect);
-
   // Initialise the Ethernet adapter
   Ethernet.begin(mac, ip);
 
   // Initialise the web server
   webserver.setDefaultCommand(&defaultPage);
+  webserver.addCommand("index.html", &defaultPage);
   webserver.addCommand("cmd", &cmdParser);
   webserver.addCommand("status.json", &statusCmd);
   webserver.begin();
