@@ -140,6 +140,25 @@ P(index_htm) = "<!DOCTYPE html>"
   "</div>"
   "</div>"
   "<script>"
+  "function updateControls() {"
+  "$.getJSON(\"/status.json\", function(json) {"
+  "if (json.hasOwnProperty(\"extern\")) {"
+  "$(\"#extern\").val(json.extern).slider(\"refresh\");"
+  "}"
+  "if (json.hasOwnProperty(\"outlet1\")) {"
+  "$(\"#outlet1\").val(json.outlet1).slider(\"refresh\");"
+  "}"
+  "if (json.hasOwnProperty(\"outlet2\")) {"
+  "$(\"#outlet2\").val(json.outlet2).slider(\"refresh\");"
+  "}"
+  "if (json.hasOwnProperty(\"outlet3\")) {"
+  "$(\"#outlet3\").val(json.outlet3).slider(\"refresh\");"
+  "}"
+  "if (json.hasOwnProperty(\"outlet4\")) {"
+  "$(\"#outlet4\").val(json.outlet4).slider(\"refresh\");"
+  "}"
+  "});"
+  "}"
   "$('select').bind('change', function(event) {"
   "element = event.target.id;"
   "if (element.substr(0, 6) == \"outlet\") {"
@@ -151,6 +170,7 @@ P(index_htm) = "<!DOCTYPE html>"
   "command = event.target.value;"
   "$.get('/cmd', { 'ele' : element, 'eleid' : eleid, 'cmd' : command });"
   "});"
+  "$('#page1').bind('pageinit', updateControls);"
   "</script>"
   "</body>"
   "</html>";
@@ -170,9 +190,9 @@ void statusCmd(WebServer &server, WebServer::ConnectionType type,
   if (authorise(server)) {
     server.print("{ \"extern\" : ");
     if (externLightState) {
-      server.print("1");
+      server.print("\"on\"");
     } else {
-      server.print("0");
+      server.print("\"off\"");
     }
     // Beware hard coded output size
     for (int i = 1; i < 5; i++) {
@@ -180,9 +200,9 @@ void statusCmd(WebServer &server, WebServer::ConnectionType type,
       server.print(i);
       server.print("\" : ");
       if (powerSwitches[i-1]) {
-    	server.print("1");
+    	server.print("\"on\"");
       } else {
-    	server.print("0");
+    	server.print("\"off\"");
       }
     }
     server.println(" }");

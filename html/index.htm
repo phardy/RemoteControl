@@ -79,6 +79,25 @@
       </div>
     </div>
     <script>
+      function updateControls() {
+        $.getJSON("/status.json", function(json) {
+          if (json.hasOwnProperty("extern")) {
+            $("#extern").val(json.extern).slider("refresh");
+          }
+          if (json.hasOwnProperty("outlet1")) {
+            $("#outlet1").val(json.outlet1).slider("refresh");
+          }
+          if (json.hasOwnProperty("outlet2")) {
+            $("#outlet2").val(json.outlet2).slider("refresh");
+          }
+          if (json.hasOwnProperty("outlet3")) {
+            $("#outlet3").val(json.outlet3).slider("refresh");
+          }
+          if (json.hasOwnProperty("outlet4")) {
+            $("#outlet4").val(json.outlet4).slider("refresh");
+          }
+        });
+      }
       $('select').bind('change', function(event) {
         element = event.target.id;
         if (element.substr(0, 6) == "outlet") {
@@ -90,6 +109,7 @@
         command = event.target.value;
         $.get('/cmd', { 'ele' : element, 'eleid' : eleid, 'cmd' : command });
       });
+      $('#page1').bind('pageinit', updateControls);
     </script>
   </body>
 </html>
