@@ -303,6 +303,7 @@ void updateTimers() {
     externlights(LOW);
   }
   if (curTime > powerTime) {
+    powerActive = false;
     sendShiftCmd(0);
   }
 }
