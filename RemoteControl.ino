@@ -1,25 +1,8 @@
 /* RemoteControl
    Home automation sketch.
 
-   Hardware:
-   * A Freetronics Etherten. But any other Arduino-compatible with
-   Ethernet and an SD card reader should work.
-   * Relays connected to pins 8 and 9. These control some 3-wire
-   ropelights.
-   * A shift register connected to pins 5, 6 and 7. This in turn
-   drives the 4 pairs of buttons on a 433MHz remote power control.
-   I'm using a Freetronics Expand module, with the outputs wired as:
-     A: 4off
-     B: 4on
-     C: 3off
-     D: 3on
-     E: 2off
-     F: 2on
-     G: 1off
-     H: 1on
-
-   Dependencies:
-   * Webduino library. ( http://github.com/sirleech/Webduino/ )
+   Refer to https://github.com/phardy/RemoteControl
+   for details and usage.
 */
 
 #include <SPI.h>
