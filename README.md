@@ -77,23 +77,25 @@ Eg:
 * `GET /cmd?eleid=0&cmd=on&timer=300` will turn on the relay pins, with
 them automatically turning off after 5 minutes.
 
-## Shift register outputs
+## Hacking
+
+### Shift register outputs
 
 The way I've connected my register outputs to the outlet controls could
 be considered a little idiosyncratic. If you wire yours differently you'll
-need to update the powerOnVals and powerOffVals arrays.
+need to update the `powerOnVals` and `powerOffVals` arrays.
 
 Each power outlet on the remote is represented by its matching index in
 each array; the first element of powerOnVals switches outlet 1 on, the
 second element outlet 2, and so on. The integers in the array are the
 values that get written to the register to turn on a single pin. So to
-use the pin A of the register to turn on outlet 1, powerOnVals[0] = 1.
+use the pin A of the register to turn on outlet 1, `powerOnVals[0] = 1`.
 
-## Hacking the HTML
+### HTML
 
 Due to size constraints in my Etherten's firmware, I'm not able to
 include the SD library to read files from an SD card. This means that
 as well as hard-coding the HTTP credentials, all of the HTML is also
-inlined in the sketch. To change the HTML, edit html/index.htm, and
+inlined in the sketch. To change the HTML, edit `html/index.htm`, and
 use prep.sh to massage it in to a form that can be easily clagged in
-to the P(index_htm) macro.
+to the `P(index_htm)` macro.
