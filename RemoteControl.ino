@@ -42,16 +42,14 @@ WebServer webserver ("", 80);
 
 // HTTP variables
 char credentials[] = "YXJuaWU6Z2V0dG9kYWNob3BwYQ==";
-const int NAMELEN = 8;
-const int VALUELEN = 8;
+const int attribLen = 8; // Buffer length for URL attributes.
+const int valueLen = 8; // Buffer length for URL values.
 
-// External lights
-int externLightState = LOW;
-// Power points
-bool powerSwitches[] = { false, false, false, false };
-// Values to write to turn power points on
-int powerOnVals[] = { 128, 32, 8, 2 };
-// Values to write to turn power points off
+int externLightState = LOW; // State of external lights
+bool powerSwitches[] = { false, false, false, false }; // State of power switches
+// Values to write to shift register to turn power points on
+int powerOnVals[] = { 128, 32, 8, 2 }; 
+// Values to write to shift register to turn power points off
 int powerOffVals[] = { 64, 16, 4, 1 };
 
 // Timer variables
@@ -230,14 +228,14 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
     }
 
     URLPARAM_RESULT rc;
-    char name[NAMELEN];
-    char value[VALUELEN];
-    char ele[NAMELEN];
+    char name[attribLen];
+    char value[valueLen];
+    char ele[attribLen];
     int eleid;
     bool cmd;
 
     while (strlen(url_tail)) {
-      rc = server.nextURLparam(&url_tail, name, NAMELEN, value, VALUELEN);
+      rc = server.nextURLparam(&url_tail, name, attribLen, value, valueLen);
       if (rc != URLPARAM_EOS) {
 	if (strcmp(name, "ele") == 0) {
 	  strcpy(value, ele);
