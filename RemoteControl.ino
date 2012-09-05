@@ -284,11 +284,11 @@ void sendShiftCmd(int cmd) {
 
 void updateTimers() {
   long curTime = millis();
-  if (curTime > timerTime) {
+  if (timerActive && (curTime > timerTime)) {
     timerActive = false;
     externlights(LOW);
   }
-  if (curTime > powerTime) {
+  if (powerActive && (curTime > powerTime)) {
     powerActive = false;
     sendShiftCmd(0);
   }
