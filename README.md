@@ -21,22 +21,61 @@ An Arduino sketch for remote home automation.
   * H: 1on
 
   If you connect your switches differently, you'll need to edit
-  powerOnVals and powerOffVals in the sketch. See below.
+  `powerOnVals` and `powerOffVals` in the sketch. See below.
   
 ## Dependencies
 
 * [Webduino](http://github.com/sirleech/Webduino/) web serving library.
 
-## Authentication
+## Setup
+
+There's a couple of things you need to be aware of before attempting to
+use this sketch.
+
+### Authentication
 
 This sketch uses the HTTP basic auth feature of the Webduino library,
 and currently the credentials are hard-coded. You'll need to edit the
 sketch to include your own before use.
 
 Credentials are Base64 encoded, and should be the username and password,
-separated by a colon, eg "admin:pass123". Base64-encode your credentials
+separated by a colon, eg "`admin:pass123`". Base64-encode your credentials
 (online encoders are easy to find), and paste it in to the credentials[]
 variable in the sketch.
+
+### Network configuration
+
+The Ethernet library in Arduino 1.0 and up can handle DHCP, but to
+keep the sketch size down I'm not using it. Set the ip[] variable to
+an unused IP address on your local network before uploading the sketch.
+
+## Usage
+
+The sketch implements a web server. Load it up, connect your arduino
+and browse to it. After authenticating, `http://your.arduino.ip/` will
+give you a jQuery Mobile page, with toggle switches indicating the
+current status of the outputs, and letting you switch them on and off.
+
+`/status.json` returns the status of all outputs in JSON format.
+
+`/cmd` is used to send commands. Currently, only GET requests are
+accepted, with the following parameters. All except `timer` are
+required.
+
+* `eleid`: An integer ID representing the outlet to change:
+  * 0 controls both relays.
+  * 1-4 controls a single outlet via the shift register.
+* `cmd`: Either "on" or "off".
+* `timer` (optional): A `long`, representing seconds until timer expires.
+  Activates a timer that will turn the external lights (`eleid` 0) off.
+  There's currently no way to disable a timer after it's been activated.
+
+Successful calls to /cmd will return the current status in JSON format.
+
+Eg:
+* `GET /cmd?eleid=3&cmd=off` will turn off outlet 3.
+* `GET /cmd?eleid=0&cmd=on&timer=300` will turn on the relay pins, with
+them automatically turning off after 5 minutes.
 
 ## Shift register outputs
 
