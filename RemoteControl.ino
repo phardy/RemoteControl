@@ -134,12 +134,11 @@ P(index_htm) = "<!DOCTYPE html>"
   "element = event.target.id;"
   "if (element.substr(0, 6) == \"outlet\") {"
   "eleid = element.substr(6, 1);"
-  "element = \"outlet\";"
   "} else {"
   "eleid = 0;"
   "}"
   "command = event.target.value;"
-  "$.get('/cmd', { 'ele' : element, 'eleid' : eleid, 'cmd' : command });"
+  "$.get('/cmd', { 'eleid' : eleid, 'cmd' : command });"
   "});"
   "$('#page1').bind('pageinit', updateControls);"
   "</script>"
@@ -208,9 +207,7 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
     while (strlen(url_tail)) {
       rc = server.nextURLparam(&url_tail, name, attribLen, value, valueLen);
       if (rc != URLPARAM_EOS) {
-	if (strcmp(name, "ele") == 0) {
-	  strcpy(value, ele);
-	} else if (strcmp(name, "eleid") == 0) {
+	if (strcmp(name, "eleid") == 0) {
 	  eleid = atoi(value);
 	} else if (strcmp(name, "cmd") == 0) {
 	  if (strcmp(value, "on") == 0) {
