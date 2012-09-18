@@ -200,7 +200,6 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
     URLPARAM_RESULT rc;
     char name[attribLen];
     char value[valueLen];
-    char ele[attribLen];
     int eleid;
     bool cmd;
 
