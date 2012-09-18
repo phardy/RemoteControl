@@ -8,6 +8,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <WebServer.h>
+#include <Timer.h>
 
 // IO pins
 // Pins for the expand module
@@ -36,10 +37,7 @@ int powerOnVals[] = { 128, 32, 8, 2 };
 int powerOffVals[] = { 64, 16, 4, 1 };
 
 // Timer variables
-bool timerActive = false;
-long timerTime;
-bool powerActive = false;
-long powerTime;
+Timer timer;
 
 // Yes, I put a web page here.
 P(index_htm) = "<!DOCTYPE html>"
@@ -200,7 +198,6 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
     URLPARAM_RESULT rc;
     char name[attribLen];
     char value[valueLen];
-    char ele[attribLen];
     int eleid;
     bool cmd;
 
@@ -216,9 +213,8 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
 	    cmd=false;
 	  }
 	} else if (strcmp(name, "timer") == 0) {
-	  long timeDelay = atol(value);
-	  timerActive = true;
-	  timerTime = millis() + timeDelay*1000;
+	  long timeDelay = atol(value) * 1000;
+	  timer.after(timeDelay*1000, externTimerCallBack);
 	}
       }
     }
@@ -236,10 +232,22 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
   sendStatus(server);
 }
 
+// Timer callback that will
+// turn off extern outputs.
+void externTimerCallBack() {
+  externlights(LOW);
+}
+
 void externlights(int state) {
   digitalWrite(relayAPin, state);
   digitalWrite(relayBPin, state);
   externLightState = state;
+}
+
+// Timer callback that will send 0 to shift register,
+// "releasing" the button we pushed.
+void powerTimerCallBack() {
+  sendShiftCmd(0);
 }
 
 void powerswitch(int outlet, bool state) {
@@ -250,8 +258,11 @@ void powerswitch(int outlet, bool state) {
     cmd = powerOffVals[outlet-1];
   }
 
-  powerActive = true;
-  powerTime = millis() + 500;
+  // Timer objects can have a maximum of 10 events
+  // attached. Just going to assume nobody mashes
+  // the button. *stare*
+  timer.after(500, powerTimerCallBack);
+
   powerSwitches[outlet-1] = state;
   sendShiftCmd(cmd);
 }
@@ -260,18 +271,6 @@ void sendShiftCmd(int cmd) {
   digitalWrite(xpLatchPin, LOW);
   shiftOut(xpDataPin, xpClockPin, MSBFIRST, cmd);
   digitalWrite(xpLatchPin, HIGH);
-}
-
-void updateTimers() {
-  long curTime = millis();
-  if (timerActive && (curTime > timerTime)) {
-    timerActive = false;
-    externlights(LOW);
-  }
-  if (powerActive && (curTime > powerTime)) {
-    powerActive = false;
-    sendShiftCmd(0);
-  }
 }
 
 void setup() {
@@ -299,7 +298,5 @@ void loop() {
   char buff[64];
   int len = 64;
   webserver.processConnection(buff, &len);
-  if (timerActive || powerActive) {
-    updateTimers();
-  }
+  timer.update();
 }

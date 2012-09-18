@@ -26,6 +26,7 @@ An Arduino sketch for remote home automation.
 ## Dependencies
 
 * [Webduino](http://github.com/sirleech/Webduino/) web serving library.
+* [Timer](https://github.com/JChristensen/Timer/) library.
 
 ## Setup
 
