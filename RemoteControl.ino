@@ -214,7 +214,7 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
 	  }
 	} else if (strcmp(name, "timer") == 0) {
 	  long timeDelay = atol(value) * 1000;
-	  timer.after(timeDelay*1000, externTimerCallBack);
+	  timer.after(timeDelay, externTimerCallBack);
 	}
       }
     }
