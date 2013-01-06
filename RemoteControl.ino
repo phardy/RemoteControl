@@ -8,6 +8,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 
+#include <OneButton.h>
 #include <Timer.h>
 #include <WebServer.h>
 
@@ -19,6 +20,10 @@ const int xpClockPin = 5;
 // Pins for the relays
 const int relayAPin = 8;
 const int relayBPin = 9;
+
+// Set up the button. I'm connecting pin to +5V when button pressed.
+// I *think* that means the active flag needs to be false.
+OneButton lightButton(3, false);
 
 // Ethernet constants
 static uint8_t mac[] = { 0x06, 0x17, 0x17, 0x17, 0x17, 0x17 };
@@ -274,6 +279,19 @@ void sendShiftCmd(int cmd) {
   digitalWrite(xpLatchPin, HIGH);
 }
 
+// On single click, turn the lights on
+// with a five-minute timer.
+void singleClickCallback() {
+  externlights(HIGH);
+  timer.after(300000, externTimerCallBack);
+}
+
+// On double click, turn the lights on
+// indefinitely.
+void doubleClickCallback() {
+  externlights(HIGH);
+}
+
 void setup() {
   pinMode(xpDataPin, OUTPUT);
   pinMode(xpLatchPin, OUTPUT);
@@ -283,6 +301,10 @@ void setup() {
 
   // Flush the expand module
   sendShiftCmd(0);
+
+  // Set up button callbacks
+  lightButton.attachClick(&singleClickCallback);
+  lightButton.attachDoubleClick(&doubleClickCallback);
 
   // Initialise the Ethernet adapter
   Ethernet.begin(mac, ip);
