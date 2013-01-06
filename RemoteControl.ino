@@ -7,8 +7,9 @@
 
 #include <SPI.h>
 #include <Ethernet.h>
-#include <WebServer.h>
+
 #include <Timer.h>
+#include <WebServer.h>
 
 // IO pins
 // Pins for the expand module
