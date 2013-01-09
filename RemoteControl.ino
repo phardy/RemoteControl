@@ -282,7 +282,7 @@ void sendShiftCmd(int cmd) {
 // On single click, turn the lights on
 // with a five-minute timer.
 void singleClickCallback() {
-  if (externlightState) {
+  if (externLightState) {
     // turn lights off if on
     externlights(LOW);
   } else {
@@ -294,7 +294,7 @@ void singleClickCallback() {
 // On double click, turn the lights on
 // indefinitely.
 void doubleClickCallback() {
-  if (externlightState) {
+  if (externLightState) {
     // turn lights off if on
     externlights(LOW);
   } else {
