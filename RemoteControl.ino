@@ -322,4 +322,5 @@ void loop() {
   int len = 64;
   webserver.processConnection(buff, &len);
   timer.update();
+  lightButton.tick();
 }
