@@ -31,7 +31,7 @@ static uint8_t ip[] = { 10, 17, 17, 5 };
 WebServer webserver ("", 80);
 
 // HTTP variables
-char credentials[] = "YXJuaWU6Z2V0dG9kYWNob3BwYQ==";
+char credentials[] = "fYXJuaWU6Z2V0dG9kYWNob3BwYQ==";
 const int attribLen = 8; // Buffer length for URL attributes.
 const int valueLen = 8; // Buffer length for URL values.
 
@@ -282,14 +282,24 @@ void sendShiftCmd(int cmd) {
 // On single click, turn the lights on
 // with a five-minute timer.
 void singleClickCallback() {
-  externlights(HIGH);
-  timer.after(300000, externTimerCallBack);
+  if (externlightState) {
+    // turn lights off if on
+    externlights(LOW);
+  } else {
+    externlights(HIGH);
+    timer.after(300000, externTimerCallBack);
+  }
 }
 
 // On double click, turn the lights on
 // indefinitely.
 void doubleClickCallback() {
-  externlights(HIGH);
+  if (externlightState) {
+    // turn lights off if on
+    externlights(LOW);
+  } else {
+    externlights(HIGH);
+  }
 }
 
 void setup() {
