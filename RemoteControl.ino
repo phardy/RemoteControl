@@ -24,6 +24,7 @@ const int relayBPin = 9;
 // Set up the button. I'm connecting pin to +5V when button pressed.
 // I *think* that means the active flag needs to be false.
 OneButton lightButton(3, false);
+long buttonDelay = 0;
 
 // Ethernet constants
 static uint8_t mac[] = { 0x06, 0x17, 0x17, 0x17, 0x17, 0x17 };
@@ -332,5 +333,9 @@ void loop() {
   int len = 64;
   webserver.processConnection(buff, &len);
   timer.update();
-  lightButton.tick();
+  // Only check button state periodically
+  if (millis() - buttonDelay > 50) {
+    lightButton.tick();
+    buttonDelay = millis();
+  }
 }
