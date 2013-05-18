@@ -87,6 +87,8 @@
         });
       }
       $('select').bind('change', function(event) {
+        $('select').slider('disable');
+        $('select').slider('refresh');
         element = event.target.id;
         if (element.substr(0, 6) == "outlet") {
           eleid = element.substr(6, 1);
@@ -95,6 +97,10 @@
         }
         command = event.target.value;
         $.get('/cmd', { 'eleid' : eleid, 'cmd' : command });
+        setTimeout(function() {
+          $('select').slider('enable');
+          $('select').slider('refresh');
+        }, 500);
       });
       $('#page1').bind('pageinit', updateControls);
     </script>
