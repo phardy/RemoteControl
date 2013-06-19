@@ -60,15 +60,16 @@ current status of the outputs, and letting you switch them on and off.
 `/status.json` returns the status of all outputs in JSON format.
 
 `/cmd` is used to send commands. Currently, only GET requests are
-accepted, with the following parameters. All except `timer` are
-required.
+accepted, with the following parameters. `eleid` is required, as well
+as either `timer` or `cmd`.
 
 * `eleid`: An integer ID representing the outlet to change:
   * 0 controls both relays.
   * 1-4 controls a single outlet via the shift register.
 * `cmd`: Either "on" or "off".
 * `timer` (optional): A `long`, representing seconds until timer expires.
-  Activates a timer that will turn the external lights (`eleid` 0) off.
+  Activates a timer that will turn off the given `eleid`. The `eleid` will
+  be turned on if it currently off.
   There's currently no way to disable a timer after it's been activated.
 
 Successful calls to /cmd will return the current status in JSON format.
