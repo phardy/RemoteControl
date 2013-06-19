@@ -211,8 +211,9 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
     URLPARAM_RESULT rc;
     char name[attribLen];
     char value[valueLen];
-    int eleid;
-    bool cmd;
+    int eleid = -1;
+    bool cmd = false;
+    long timeDelay = 0;
 
     while (strlen(url_tail)) {
       rc = server.nextURLparam(&url_tail, name, attribLen, value, valueLen);
@@ -226,20 +227,44 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
 	    cmd=false;
 	  }
 	} else if (strcmp(name, "timer") == 0) {
-	  long timeDelay = atol(value) * 1000;
+	  timeDelay = atol(value) * 1000;
 	  timer.after(timeDelay, externTimerCallBack);
 	}
       }
     }
 
-    if (eleid == 0) {
-      if (cmd) {
+    if (timeDelay) {
+      cmd=true;
+      if (eleid == 0) {
 	externlights(HIGH);
+	timer.after(timeDelay, externTimerCallBack);
       } else {
-	externlights(LOW);
+	powerswitch(eleid, cmd);
+	switch(eleid) {
+	case 1:
+	  timer.after(timeDelay, power1TimerCallBack);
+	  break;
+	case 2:
+	  timer.after(timeDelay, power2TimerCallBack);
+	  break;
+	case 3:
+	  timer.after(timeDelay, power3TimerCallBack);
+	  break;
+	case 4:
+	  timer.after(timeDelay, power4TimerCallBack);
+	  break;
+	}
       }
     } else {
-      powerswitch(eleid, cmd);
+      if (eleid == 0) {
+	if (cmd) {
+	  externlights(HIGH);
+	} else {
+	  externlights(LOW);
+	}
+      } else {
+	powerswitch(eleid, cmd);
+      }
     }
   }
   sendStatus(server);
@@ -249,6 +274,26 @@ void cmdParser(WebServer &server, WebServer::ConnectionType type,
 // turn off extern outputs.
 void externTimerCallBack() {
   externlights(LOW);
+}
+
+// Timer callback for turning off outlet 1
+void power1TimerCallBack() {
+  powerswitch(1, false);
+}
+
+// Timer callback for turning off outlet 2
+void power2TimerCallBack() {
+  powerswitch(2, false);
+}
+
+// Timer callback for turning off outlet 3
+void power3TimerCallBack() {
+  powerswitch(3, false);
+}
+
+// Timer callback for turning off outlet 4
+void power4TimerCallBack() {
+  powerswitch(4, false);
 }
 
 void externlights(int state) {
