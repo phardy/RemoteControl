@@ -22,11 +22,17 @@ An Arduino sketch for remote home automation.
 
   If you connect your switches differently, you'll need to edit
   `powerOnVals` and `powerOffVals` in the sketch. See below.
-  
+* A momentary push button connected to pin 4, that will drive the pin high
+  when pressed. This is a manual switch for the external lights. I used
+  a funky 12V illuminated button, in series with one of the relays, to
+  give some feedback for when the lights are on.
+
 ## Dependencies
 
 * [Webduino](http://github.com/sirleech/Webduino/) web serving library.
 * [Timer](https://github.com/JChristensen/Timer/) timing library.
+* [OneButton](http://www.mathertel.de/Arduino/OneButtonLibrary.aspx)
+  button management library.
 
 ## Setup
 
@@ -78,6 +84,13 @@ Eg:
 * `GET /cmd?eleid=3&cmd=off` will turn off outlet 3.
 * `GET /cmd?eleid=0&cmd=on&timer=300` will turn on the relay pins, with
 them automatically turning off after 5 minutes.
+
+### Button presses
+
+Pressing the pushbutton once will turn the external lights on with a
+five minute timer. A quick double-press turns the external lights on
+permanently. Pressing the button at any time while the lights are on
+will turn them off.
 
 ## Hacking
 
