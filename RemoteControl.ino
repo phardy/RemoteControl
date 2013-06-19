@@ -87,19 +87,19 @@ void statusCmd(WebServer &server, WebServer::ConnectionType type,
 
 void defaultPage(WebServer &server, WebServer::ConnectionType type,
 		 char *, bool) {
-  if (SD.exists("html/index.htm") && authorise(server)) {
-    File index = SD.open("html/index.htm");
-    while (index.available()) {
-      server.print(index.read());
+  if (authorise(server)) {
+    if (SD.exists("html/index.htm")) {
+      File index = SD.open("html/index.htm");
+      while (index.available()) {
+	server.print(index.read());
+      }
+      index.close();
+    } else {
+      server.println("html/index.htm not found in root of SD card.");
     }
-    index.close();
-  } else {
-    server.println("HTTP/1.1 404 Not Found");
-    server.println();
-    server.println("html/index.htm not found in root of SD card.");
   }
 }
-
+      
 void SDFailed(WebServer &server, WebServer::ConnectionType type,
 	      char *, bool) {
   server.httpServerError();
