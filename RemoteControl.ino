@@ -6,6 +6,7 @@
 */
 
 #include <SPI.h>
+#include <SD.h>
 #include <Ethernet.h>
 
 #include <OneButton.h>
@@ -45,116 +46,6 @@ int powerOffVals[] = { 64, 16, 4, 1 };
 
 // Timer variables
 Timer timer;
-
-// Yes, I put a web page here.
-P(index_htm) = "<!DOCTYPE html>"
-"<html>"
-"<head>"
-"<title>Remote control</title>"
-"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-"<link rel=\"stylesheet\" href=\"http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css\" />"
-"<script src=\"http://code.jquery.com/jquery-1.7.1.min.js\"></script>"
-"<script src=\"http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.js\"></script>"
-"</head>"
-"<body>"
-"<div data-role=\"page\" id=\"page1\" data-theme=\"a\">"
-"<div data-role=\"header\">"
-"<h3>Remote Control</h3>"
-"</div>"
-"<div data-role=\"content\" style=\"padding: 15px\">"
-"<div class=\"ui-grid-b\">"
-"<div class=\"ui-block-a\">"
-"</div>"
-"<div class=\"ui-block-b\">"
-"<div data-role=\"fieldcontain\">"
-"<fieldset data-role=\"controlgroup\">"
-"<label for=\"extern\">Entry lights</label>"
-"<select name=\"extern\" id=\"extern\" data-theme=\"\" data-role=\"slider\">"
-"<option value=\"off\">Off</option>"
-"<option value=\"on\">On</option>"
-"</select>"
-"</fieldset>"
-"</div>"
-"</div>"
-"<div class=\"ui-block-c\"></div>"
-"</div>"
-"<h3>Power switches</h3>"
-"<div class=\"ui-grid-a\">"
-"<div class=\"ui-block-a\">"
-"<div data-role=\"fieldcontain\">"
-"<fieldset data-role=\"controlgroup\">"
-"<label for=\"outlet1\">Outlet 1</label>"
-"<select name=\"outlet1\" id=\"outlet1\" data-theme=\"\" data-role=\"slider\">"
-"<option value=\"off\">Off</option>"
-"<option value=\"on\">On</option>"
-"</select>"
-"</fieldset>"
-"</div>"
-"</div>"
-"<div class=\"ui-block-b\">"
-"<div data-role=\"fieldcontain\">"
-"<fieldset data-role=\"controlgroup\">"
-"<label for=\"outlet3\">Outlet 3</label>"
-"<select name=\"outlet3\" id=\"outlet3\" data-theme=\"\" data-role=\"slider\">"
-"<option value=\"off\">Off</option>"
-"<option value=\"on\">On</option>"
-"</select>"
-"</fieldset>"
-"</div>"
-"</div>"
-"<div class=\"ui-block-a\">"
-"<div data-role=\"fieldcontain\">"
-"<fieldset data-role=\"controlgroup\">"
-"<label for=\"outlet2\">Outlet 2</label>"
-"<select name=\"outlet2\" id=\"outlet2\" data-theme=\"\" data-role=\"slider\">"
-"<option value=\"off\">Off</option>"
-"<option value=\"on\">On</option>"
-"</select>"
-"</fieldset>"
-"</div>"
-"</div>"
-"<div class=\"ui-block-b\">"
-"<div data-role=\"fieldcontain\">"
-"<fieldset data-role=\"controlgroup\">"
-"<label for=\"outlet4\">Outlet 4</label>"
-"<select name=\"outlet4\" id=\"outlet4\" data-theme=\"\" data-role=\"slider\">"
-"<option value=\"off\">Off</option>"
-"<option value=\"on\">On</option>"
-"</select>"
-"</fieldset>"
-"</div>"
-"</div>"
-"</div>"
-"</div>"
-"</div>"
-"<script>"
-"function updateControls() {"
-"$.getJSON(\"/status.json\", function(json) {"
-"$.each(json, function(key, value) {"
-"$(\"#\"+key).val(value).slider(\"refresh\");"
-"});"
-"});"
-"}"
-"$('select').bind('change', function(event) {"
-"$('select').slider('disable');"
-"$('select').slider('refresh');"
-"element = event.target.id;"
-"if (element.substr(0, 6) == \"outlet\") {"
-"eleid = element.substr(6, 1);"
-"} else {"
-"eleid = 0;"
-"}"
-"command = event.target.value;"
-"$.get('/cmd', { 'eleid' : eleid, 'cmd' : command });"
-"setTimeout(function() {"
-"$('select').slider('enable');"
-"$('select').slider('refresh');"
-"}, 500);"
-"});"
-"$('#page1').bind('pageinit', updateControls);"
-"</script>"
-"</body>"
-"</html>";
 
 boolean authorise(WebServer &server) {
   if (server.checkCredentials(credentials)) {
@@ -196,11 +87,25 @@ void statusCmd(WebServer &server, WebServer::ConnectionType type,
 
 void defaultPage(WebServer &server, WebServer::ConnectionType type,
 		 char *, bool) {
-  if (authorise(server)) {
-    server.printP(index_htm);
+  if (SD.exists("html/index.htm") && authorise(server)) {
+    File index = SD.open("html/index.htm");
+    while (index.available()) {
+      server.print(index.read());
+    }
+    index.close();
+  } else {
+    server.println("HTTP/1.1 404 Not Found");
+    server.println();
+    server.println("html/index.htm not found in root of SD card.");
   }
 }
- 
+
+void SDFailed(WebServer &server, WebServer::ConnectionType type,
+	      char *, bool) {
+  server.httpServerError();
+  server.println("Initialising SD card failed.");
+}
+
 void cmdParser(WebServer &server, WebServer::ConnectionType type,
 	       char *url_tail, bool tail_complete) {
   if (authorise(server)) {
@@ -326,12 +231,16 @@ void setup() {
   // Initialise the Ethernet adapter
   Ethernet.begin(mac, ip);
 
-  // Initialise the web server
-  webserver.setDefaultCommand(&defaultPage);
-  webserver.addCommand("index.html", &defaultPage);
-  webserver.addCommand("cmd", &cmdParser);
-  webserver.addCommand("status.json", &statusCmd);
-  webserver.begin();
+  if (SD.begin(4)) {
+    // Initialise the web server
+    webserver.setDefaultCommand(&defaultPage);
+    webserver.addCommand("index.html", &defaultPage);
+    webserver.addCommand("cmd", &cmdParser);
+    webserver.addCommand("status.json", &statusCmd);
+  } else {
+    webserver.setDefaultCommand(&SDFailed);
+  }
+    webserver.begin();
 }
 
 void loop() {
