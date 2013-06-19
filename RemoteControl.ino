@@ -91,7 +91,7 @@ void defaultPage(WebServer &server, WebServer::ConnectionType type,
     if (SD.exists("html/index.htm")) {
       File index = SD.open("html/index.htm");
       while (index.available()) {
-	server.print(index.read());
+	server.print(char(index.read()));
       }
       index.close();
     } else {
