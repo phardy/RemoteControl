@@ -105,7 +105,7 @@
           });
         });
       }
-      $("select").bind('change', function(event) {
+      $("select[data-role='slider']").bind('change', function(event) {
         $("select[data-role='slider']").slider('disable');
         $("select[data-role='slider']").slider('refresh');
         element = event.target.id;
