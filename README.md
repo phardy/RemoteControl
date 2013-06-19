@@ -6,6 +6,8 @@ An Arduino sketch for remote home automation.
 
 * An Ethernet shield, or an Arduino with onboard Ethernet. I'm using
   a Freetronics Etherten.
+* An SD card reader. Again, this is built in to the Etherten. Other
+  SD readers that work with the example sketches should be fine.
 * Relays connected to pins 8 and 9. These drive external lighting;
   I've got mine switching some LED ropelight.
 * A shift register on pins 5, 6 and 7. This in turn drives the 4
@@ -32,6 +34,13 @@ An Arduino sketch for remote home automation.
 
 There's a couple of things you need to be aware of before attempting to
 use this sketch.
+
+### SD card
+
+This sketch reads HTML content from an SD card. The card should be
+formatted as per the [Arduino SD card notes](http://arduino.cc/en/Reference/SDCardNotes).
+Once formatted, copy the `html` directory from this repository on to the
+root of the SD card.
 
 ### Authentication
 
