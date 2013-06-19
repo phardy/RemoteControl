@@ -115,7 +115,7 @@
           eleid = 0;
         }
         command = event.target.value;
-        // $.get('/cmd', { 'eleid' : eleid, 'cmd' : command });
+        $.get('/cmd', { 'eleid' : eleid, 'cmd' : command });
         setTimeout(function() {
           $("select[data-role='slider']").slider('enable');
           $("select[data-role='slider']").slider('refresh');
