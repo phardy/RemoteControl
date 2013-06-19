@@ -105,6 +105,16 @@
           });
         });
       }
+      $("input").bind('click', function(event) {
+        element = event.target.id;
+        if (element.substr(0, 6) == "outlet") {
+          eleid = element.substr(6, 1);
+        } else {
+          eleid = 0;
+        }
+        delay = $("#timedelay").val();
+        $.get('/cmd', { 'eleid' : eleid, 'timer' : delay });
+      });
       $("select[data-role='slider']").bind('change', function(event) {
         $("select[data-role='slider']").slider('disable');
         $("select[data-role='slider']").slider('refresh');
