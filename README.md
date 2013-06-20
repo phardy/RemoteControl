@@ -22,7 +22,7 @@ An Arduino sketch for remote home automation.
 
   If you connect your switches differently, you'll need to edit
   `powerOnVals` and `powerOffVals` in the sketch. See below.
-* A momentary push button connected to pin 4, that will drive the pin high
+* A momentary push button connected to pin 3, that will drive the pin high
   when pressed. This is a manual switch for the external lights. I used
   a funky 12V illuminated button, in series with one of the relays, to
   give some feedback for when the lights are on.
